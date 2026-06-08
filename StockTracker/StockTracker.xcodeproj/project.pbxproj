@@ -19,6 +19,8 @@
 		A1000001000000000000000A /* WebSocketMessageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000A /* WebSocketMessageService.swift */; };
 		A1000001000000000000000B /* MessageFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000B /* MessageFeedViewModel.swift */; };
 		A1000001000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000C /* Assets.xcassets */; };
+		A1000001000000000000000D /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000E /* NotificationService.swift */; };
+		A1000001000000000000000E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000F /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +37,8 @@
 		A2000001000000000000000B /* MessageFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageFeedViewModel.swift; sourceTree = "<group>"; };
 		A2000001000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000001000000000000000D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A2000001000000000000000E /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A2000001000000000000000F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A30000010000000000000001 /* StockTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StockTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000010000000000000001 /* StockTrackerApp.swift */,
+				A2000001000000000000000F /* AppDelegate.swift */,
 				A50000010000000000000004 /* Views */,
 				A50000010000000000000005 /* ViewModels */,
 				A50000010000000000000006 /* Models */,
@@ -113,6 +118,7 @@
 				A20000010000000000000008 /* DummyMessageService.swift */,
 				A20000010000000000000009 /* PollingMessageService.swift */,
 				A2000001000000000000000A /* WebSocketMessageService.swift */,
+				A2000001000000000000000E /* NotificationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -197,6 +203,8 @@
 				A10000010000000000000009 /* PollingMessageService.swift in Sources */,
 				A1000001000000000000000A /* WebSocketMessageService.swift in Sources */,
 				A1000001000000000000000B /* MessageFeedViewModel.swift in Sources */,
+				A1000001000000000000000D /* NotificationService.swift in Sources */,
+				A1000001000000000000000E /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -33,6 +33,10 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(useDummyData, forKey: Keys.useDummyData) }
     }
 
+    @Published var notificationsEnabled: Bool {
+        didSet { UserDefaults.standard.set(notificationsEnabled, forKey: Keys.notificationsEnabled) }
+    }
+
     var baseURL: URL {
         URL(string: "http://\(serverHost):\(serverPort)")!
     }
@@ -48,6 +52,7 @@ final class AppSettings: ObservableObject {
         let modeRaw = defaults.string(forKey: Keys.connectionMode) ?? ConnectionMode.polling.rawValue
         connectionMode = ConnectionMode(rawValue: modeRaw) ?? .polling
         useDummyData = defaults.object(forKey: Keys.useDummyData) as? Bool ?? true
+        notificationsEnabled = defaults.object(forKey: Keys.notificationsEnabled) as? Bool ?? false
     }
 
     private enum Keys {
@@ -55,5 +60,6 @@ final class AppSettings: ObservableObject {
         static let serverPort = "serverPort"
         static let connectionMode = "connectionMode"
         static let useDummyData = "useDummyData"
+        static let notificationsEnabled = "notificationsEnabled"
     }
 }

@@ -10,6 +10,7 @@ final class MessageFeedViewModel: ObservableObject {
 
     private var service: MessageSyncService?
     private var settings: AppSettings?
+    private var skipNotificationsForNextBatch = true
 
     var lastMessageID: String? {
         messages.last?.id
@@ -42,6 +43,7 @@ final class MessageFeedViewModel: ObservableObject {
             }
         }
 
+        skipNotificationsForNextBatch = true
         service.start(lastMessageID: lastMessageID)
         isRunning = true
         lastError = nil
@@ -69,8 +71,17 @@ final class MessageFeedViewModel: ObservableObject {
         let unique = incoming.filter { !existingIDs.contains($0.id) }
         guard !unique.isEmpty else { return }
 
+        let shouldNotify = settings?.notificationsEnabled == true && !skipNotificationsForNextBatch
+        skipNotificationsForNextBatch = false
+
         messages.append(contentsOf: unique)
         service?.updateLastMessageID(messages.last?.id)
         lastError = nil
+
+        if shouldNotify {
+            for message in unique {
+                NotificationService.shared.notify(for: message)
+            }
+        }
     }
 }
