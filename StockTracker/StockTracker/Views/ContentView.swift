@@ -7,134 +7,127 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.messages.isEmpty {
-                    emptyState
-                } else {
-                    messageList
+            ZStack {
+                settings.palette.background.ignoresSafeArea()
+
+                Group {
+                    if viewModel.messages.isEmpty {
+                        emptyState
+                    } else {
+                        feedList
+                    }
                 }
             }
-            .navigationTitle("Stock Tracker")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    GoldiumWordmark()
+                }
                 ToolbarItem(placement: .topBarLeading) {
+                    connectionIndicator
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
-                    }
-                }
-
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    if viewModel.isRunning {
-                        Button("Stop") { viewModel.stop() }
-                    } else {
-                        Button("Start") { viewModel.start() }
-                    }
-
-                    Menu {
-                        Button("Clear messages", role: .destructive) {
-                            viewModel.clearMessages()
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(settings.palette.secondaryText)
                     }
                 }
             }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                statusBar
-            }
+            .toolbarBackground(settings.palette.headerBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showSettings) {
                 SettingsView(settings: settings, viewModel: viewModel)
+                    .environment(\.goldiumPalette, settings.palette)
             }
+            .environment(\.goldiumPalette, settings.palette)
+            .preferredColorScheme(settings.colorScheme.swiftUIColorScheme)
             .onAppear {
                 viewModel.configure(settings: settings)
                 viewModel.start()
             }
-            .onChange(of: settings.connectionMode) { _, _ in
-                viewModel.restart()
-            }
-            .onChange(of: settings.useDummyData) { _, _ in
-                viewModel.restart()
-            }
+            .onChange(of: settings.connectionMode) { _, _ in viewModel.restart() }
+            .onChange(of: settings.useDummyData) { _, _ in viewModel.restart() }
+            .onChange(of: settings.serverBaseURL) { _, _ in viewModel.restart() }
         }
     }
 
-    private var statusBar: some View {
-        VStack(spacing: 4) {
-            HStack {
-                Circle()
-                    .fill(viewModel.isRunning ? Color.green : Color.gray)
-                    .frame(width: 8, height: 8)
-                Text(viewModel.statusText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if settings.useDummyData {
-                    Text("DUMMY")
-                        .font(.caption2.weight(.bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.orange.opacity(0.2))
-                        .foregroundStyle(.orange)
-                        .clipShape(Capsule())
-                } else {
-                    Text(settings.connectionMode == .polling ? "POLL 5s" : "WS")
-                        .font(.caption2.weight(.bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.15))
-                        .foregroundStyle(.blue)
-                        .clipShape(Capsule())
-                }
-            }
-
-            if let lastID = viewModel.lastMessageID {
-                Text("Last ID: \(lastID)")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            if let error = viewModel.lastError {
-                Text(error)
-                    .font(.caption2)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+    private var connectionIndicator: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(viewModel.isRunning ? settings.palette.profit : settings.palette.secondaryText)
+                .frame(width: 7, height: 7)
+            Text(viewModel.isRunning ? "Live" : "Offline")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(settings.palette.secondaryText)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.bar)
     }
 
-    private var messageList: some View {
+    private var feedList: some View {
         ScrollView {
-            LazyVStack(spacing: 14) {
+            LazyVStack(spacing: 0) {
+                if let error = viewModel.lastError {
+                    errorBanner(error)
+                }
+
                 ForEach(viewModel.messages) { message in
-                    MessageCardView(message: message)
+                    FeedCardView(
+                        message: message,
+                        isNew: viewModel.isNewMessage(message.id)
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+
+                    Divider()
+                        .overlay(settings.palette.divider)
+                        .padding(.leading, 16)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.top, 4)
+            .padding(.bottom, 24)
         }
-        .background(Color(.systemGroupedBackground))
+        .refreshable {
+            viewModel.restart()
+        }
+    }
+
+    private func errorBanner(_ error: String) -> some View {
+        HStack {
+            Image(systemName: "exclamationmark.triangle.fill")
+            Text(error)
+                .font(.caption)
+            Spacer()
+            Button("Retry") { viewModel.restart() }
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundStyle(settings.palette.loss)
+        .padding(12)
+        .background(settings.palette.mutedLoss)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Waiting for messages…")
-                .font(.headline)
-            Text("The app polls or listens via WebSocket every 5 seconds. Dummy data is enabled by default.")
+        VStack(spacing: 20) {
+            GoldiumLogo(size: 64)
+            Text("Your market feed")
+                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .foregroundStyle(settings.palette.primaryText)
+            Text("Alerts and end-of-day summaries will appear here as they arrive over WebSocket.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(settings.palette.secondaryText)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 36)
+
+            if !settings.useDummyData {
+                Text(viewModel.keepaliveStatus)
+                    .font(.caption)
+                    .foregroundStyle(settings.palette.secondaryText)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
     }
 }
 

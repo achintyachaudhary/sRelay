@@ -39,26 +39,35 @@ final class NotificationService {
 
 private extension StockMessage {
     var notificationTitle: String {
-        if let symbol = rawJSON["symbol"]?.stringValue {
-            let type = rawJSON["type"]?.stringValue ?? "update"
-            return "\(symbol) · \(type.replacingOccurrences(of: "_", with: " "))"
+        switch FeedMessageType(raw: rawJSON["type"]?.stringValue) {
+        case .trigger:
+            if let trigger = TriggerFeedItem(message: self) {
+                return "Goldium · \(trigger.symbol) \(trigger.alertDirection.label)"
+            }
+        case .eodSummary:
+            return "Goldium · End of Day Summary"
+        case .unknown:
+            break
         }
-        return rawJSON["type"]?.stringValue?
-            .replacingOccurrences(of: "_", with: " ")
-            .capitalized ?? "Stock Tracker"
+
+        if let symbol = rawJSON["symbol"]?.stringValue {
+            return "Goldium · \(symbol)"
+        }
+        return "Goldium"
     }
 
     var notificationBody: String {
-        if let text = rawJSON["message"]?.stringValue {
-            return text
-        }
-
-        if let price = rawJSON["price"] {
-            var parts = ["Price: \(price.displayString)"]
-            if let change = rawJSON["change_percent"] {
-                parts.append("Change: \(change.displayString)%")
+        switch FeedMessageType(raw: rawJSON["type"]?.stringValue) {
+        case .trigger:
+            if let trigger = TriggerFeedItem(message: self) {
+                return "\(trigger.alertLabel) · \(GoldiumFormatters.currency(trigger.currentPrice)) (\(GoldiumFormatters.percent(trigger.stockChangePercent)))"
             }
-            return parts.joined(separator: " · ")
+        case .eodSummary:
+            if let summary = EODSummaryFeedItem(message: self) {
+                return "P&L \(GoldiumFormatters.currency(summary.todayPnL)) (\(GoldiumFormatters.percent(summary.todayPnLPercent))) · \(summary.stocks.count) stocks"
+            }
+        case .unknown:
+            break
         }
 
         return displayFields

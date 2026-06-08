@@ -7,22 +7,41 @@ final class MessageFeedViewModel: ObservableObject {
     @Published private(set) var statusText = "Idle"
     @Published private(set) var lastError: String?
     @Published private(set) var isRunning = false
+    @Published private(set) var keepaliveStatus = "Keepalive idle"
+    @Published private(set) var newlyArrivedIDs: Set<String> = []
 
     private var service: MessageSyncService?
     private var settings: AppSettings?
     private var skipNotificationsForNextBatch = true
+    private let messageStore = MessageStore()
+    private let keepaliveService = KeepaliveService()
 
     var lastMessageID: String? {
-        messages.last?.id
+        messages.first?.id
     }
 
     func configure(settings: AppSettings) {
         self.settings = settings
+
+        keepaliveService.onStatusChange = { [weak self] status in
+            Task { @MainActor in
+                self?.keepaliveStatus = status
+            }
+        }
+
+        let persisted = messageStore.load()
+        if !persisted.isEmpty {
+            messages = sortNewestFirst(persisted)
+        }
     }
 
     func start() {
         guard let settings else { return }
         stop()
+
+        if !settings.useDummyData {
+            keepaliveService.start(baseURL: settings.baseURL)
+        }
 
         let service = MessageSyncServiceFactory.make(settings: settings)
         self.service = service
@@ -50,10 +69,12 @@ final class MessageFeedViewModel: ObservableObject {
     }
 
     func stop() {
+        keepaliveService.stop()
         service?.stop()
         service = nil
         isRunning = false
         statusText = "Stopped"
+        keepaliveStatus = "Keepalive stopped"
     }
 
     func restart() {
@@ -63,7 +84,13 @@ final class MessageFeedViewModel: ObservableObject {
 
     func clearMessages() {
         messages = []
+        newlyArrivedIDs = []
+        messageStore.clear()
         service?.updateLastMessageID(nil)
+    }
+
+    func isNewMessage(_ id: String) -> Bool {
+        newlyArrivedIDs.contains(id)
     }
 
     private func appendMessages(_ incoming: [StockMessage]) {
@@ -74,14 +101,32 @@ final class MessageFeedViewModel: ObservableObject {
         let shouldNotify = settings?.notificationsEnabled == true && !skipNotificationsForNextBatch
         skipNotificationsForNextBatch = false
 
-        messages.append(contentsOf: unique)
-        service?.updateLastMessageID(messages.last?.id)
+        for message in unique.reversed() {
+            messages.insert(message, at: 0)
+        }
+        newlyArrivedIDs.formUnion(unique.map(\.id))
+
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            newlyArrivedIDs.subtract(unique.map(\.id))
+        }
+
+        messageStore.save(sortNewestFirst(messages))
+        service?.updateLastMessageID(messages.first?.id)
         lastError = nil
 
         if shouldNotify {
             for message in unique {
                 NotificationService.shared.notify(for: message)
             }
+        }
+    }
+
+    private func sortNewestFirst(_ items: [StockMessage]) -> [StockMessage] {
+        items.sorted { lhs, rhs in
+            let left = lhs.rawJSON["timestamp"]?.stringValue ?? lhs.id
+            let right = rhs.rawJSON["timestamp"]?.stringValue ?? rhs.id
+            return left > right
         }
     }
 }

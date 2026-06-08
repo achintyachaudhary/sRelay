@@ -4,71 +4,21 @@ struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var viewModel: MessageFeedViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.goldiumPalette) private var palette
     @State private var permissionDenied = false
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Server") {
-                    TextField("Host / IP", text: $settings.serverHost)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-
-                    TextField("Port", text: $settings.serverPort)
-                        .keyboardType(.numberPad)
-                }
-
-                Section("Connection") {
-                    Picker("Mode", selection: $settings.connectionMode) {
-                        ForEach(ConnectionMode.allCases) { mode in
-                            Text(mode.displayName).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-
-                    Toggle("Use dummy data (until BE is ready)", isOn: $settings.useDummyData)
-                }
-
-                Section("Notifications") {
-                    Toggle("Notify on new messages", isOn: notificationsBinding)
-
-                    if permissionDenied {
-                        Text("Notifications are disabled in iOS Settings. Enable them for Stock Tracker to receive alerts.")
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    } else if settings.notificationsEnabled {
-                        Text("You'll get a notification whenever the server pushes a new message.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section("API Reference") {
-                    LabeledContent("Polling") {
-                        Text("GET /api/v1/messages?since_id={id}")
-                            .font(.caption)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    LabeledContent("WebSocket") {
-                        Text("ws://host:port/ws/messages")
-                            .font(.caption)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    Text("See API_CONTRACT.md in the project for full request/response samples.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Section {
-                    Button("Apply & Restart Connection") {
-                        viewModel.restart()
-                        dismiss()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
+                appearanceSection
+                serverSection
+                connectionSection
+                notificationsSection
+                advancedSection
+                applySection
             }
+            .scrollContentBackground(.hidden)
+            .background(palette.background)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -79,6 +29,86 @@ struct SettingsView: View {
             .task {
                 await refreshPermissionStatus()
             }
+        }
+        .environment(\.goldiumPalette, palette)
+    }
+
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: $settings.colorScheme) {
+                ForEach(AppColorScheme.allCases) { scheme in
+                    Text(scheme.displayName).tag(scheme)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
+    private var serverSection: some View {
+        Section("Server") {
+            TextField("Server URL", text: $settings.serverBaseURL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.URL)
+
+            if !settings.isServerURLValid {
+                Text("Invalid URL. Use https://srelay.onrender.com")
+                    .font(.caption)
+                    .foregroundStyle(palette.loss)
+            }
+
+            Button("Reset to default (srelay.onrender.com)") {
+                settings.resetServerURLToDefault()
+            }
+            .font(.caption)
+        }
+    }
+
+    private var connectionSection: some View {
+        Section("Connection") {
+            Picker("Mode", selection: $settings.connectionMode) {
+                ForEach(ConnectionMode.allCases) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+
+            Toggle("Use dummy data (offline testing)", isOn: $settings.useDummyData)
+        }
+    }
+
+    private var notificationsSection: some View {
+        Section("Notifications") {
+            Toggle("Notify on new messages", isOn: notificationsBinding)
+
+            if permissionDenied {
+                Text("Enable notifications for Goldium in iOS Settings.")
+                    .font(.caption)
+                    .foregroundStyle(palette.loss)
+            }
+        }
+    }
+
+    private var advancedSection: some View {
+        Section("Advanced") {
+            LabeledContent("Keepalive") {
+                Text("GET /health every 7 min")
+                    .font(.caption)
+            }
+            Button("Clear feed", role: .destructive) {
+                viewModel.clearMessages()
+            }
+        }
+    }
+
+    private var applySection: some View {
+        Section {
+            Button("Apply & Restart Connection") {
+                viewModel.restart()
+                dismiss()
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 

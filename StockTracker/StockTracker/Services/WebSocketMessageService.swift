@@ -10,6 +10,11 @@ final class WebSocketMessageService: MessageSyncService {
     private var lastMessageID: String?
     private let session: URLSession
 
+    private var isStopped = true
+    private var reconnectAttempts = 0
+    private let maxReconnectAttempts = 20
+    private var reconnectWorkItem: DispatchWorkItem?
+
     init(url: URL, session: URLSession = .shared) {
         self.url = url
         self.session = session
@@ -17,8 +22,29 @@ final class WebSocketMessageService: MessageSyncService {
 
     func start(lastMessageID: String?) {
         stop()
+        isStopped = false
         self.lastMessageID = lastMessageID
-        onStatusChange?("Connecting WebSocket…")
+        reconnectAttempts = 0
+        connect()
+    }
+
+    func stop() {
+        isStopped = true
+        reconnectWorkItem?.cancel()
+        reconnectWorkItem = nil
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+        webSocketTask = nil
+        onStatusChange?("Stopped")
+    }
+
+    func updateLastMessageID(_ id: String?) {
+        lastMessageID = id
+    }
+
+    private func connect() {
+        guard !isStopped else { return }
+
+        onStatusChange?(reconnectAttempts == 0 ? "Connecting WebSocket…" : "Reconnecting WebSocket…")
 
         let task = session.webSocketTask(with: url)
         webSocketTask = task
@@ -28,15 +54,24 @@ final class WebSocketMessageService: MessageSyncService {
         listen()
     }
 
-    func stop() {
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
-        webSocketTask = nil
-        onStatusChange?("Stopped")
-    }
+    private func scheduleReconnect() {
+        guard !isStopped else { return }
 
-    func updateLastMessageID(_ id: String?) {
-        lastMessageID = id
-        sendSyncRequest()
+        reconnectAttempts += 1
+        if reconnectAttempts > maxReconnectAttempts {
+            onError?("WebSocket reconnect limit reached")
+            onStatusChange?("WebSocket disconnected")
+            return
+        }
+
+        let delay = min(pow(2.0, Double(reconnectAttempts - 1)), 60.0)
+        onStatusChange?("Reconnecting in \(Int(delay))s…")
+
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.connect()
+        }
+        reconnectWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
 
     private func sendSyncRequest() {
@@ -52,18 +87,28 @@ final class WebSocketMessageService: MessageSyncService {
             if let error {
                 self?.onError?(error.localizedDescription)
             } else {
+                self?.reconnectAttempts = 0
                 self?.onStatusChange?("WebSocket connected")
             }
         }
     }
 
+    private func sendPong() {
+        guard let data = try? JSONSerialization.data(withJSONObject: ["action": "pong"]),
+              let text = String(data: data, encoding: .utf8) else { return }
+
+        webSocketTask?.send(.string(text)) { _ in }
+    }
+
     private func listen() {
         webSocketTask?.receive { [weak self] result in
-            guard let self else { return }
+            guard let self, !self.isStopped else { return }
 
             switch result {
             case .failure(let error):
                 self.onError?(error.localizedDescription)
+                self.webSocketTask = nil
+                self.scheduleReconnect()
             case .success(let message):
                 self.handle(message)
                 self.listen()
@@ -82,7 +127,10 @@ final class WebSocketMessageService: MessageSyncService {
         guard let text, let data = text.data(using: .utf8) else { return }
 
         if let envelope = try? JSONDecoder().decode(WebSocketEnvelope.self, from: data) {
-            if envelope.type == "ping" { return }
+            if envelope.type == "ping" {
+                sendPong()
+                return
+            }
             if let messages = envelope.messages, !messages.isEmpty {
                 onMessages?(messages)
             }

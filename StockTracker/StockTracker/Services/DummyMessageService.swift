@@ -6,48 +6,41 @@ final class DummyMessageService: MessageSyncService {
     var onStatusChange: ((String) -> Void)?
 
     private var timer: Timer?
-    private var lastMessageID: String?
     private var messageCounter = 0
 
     private let seedMessages: [StockMessage] = [
-        StockMessage(id: "msg_001", rawJSON: [
-            "id": .string("msg_001"),
-            "timestamp": .string("2025-06-08T09:30:00Z"),
-            "type": .string("price_update"),
-            "symbol": .string("RELIANCE"),
-            "price": .double(2845.50),
-            "change_percent": .double(1.25),
-            "volume": .int(1_250_000)
-        ]),
-        StockMessage(id: "msg_002", rawJSON: [
-            "id": .string("msg_002"),
-            "timestamp": .string("2025-06-08T09:31:00Z"),
-            "type": .string("price_update"),
-            "symbol": .string("TCS"),
-            "price": .double(3842.75),
-            "change_percent": .double(-0.45),
-            "volume": .int(890_000)
-        ]),
-        StockMessage(id: "msg_003", rawJSON: [
-            "id": .string("msg_003"),
-            "timestamp": .string("2025-06-08T09:32:00Z"),
-            "type": .string("alert"),
-            "symbol": .string("INFY"),
-            "message": .string("Volume spike detected — 3x average"),
-            "severity": .string("medium")
-        ])
+        makeTrigger(
+            id: "msg_001",
+            symbol: "RELIANCE",
+            name: "Reliance Industries",
+            price: 2845.50,
+            change: 1.25,
+            direction: "above",
+            threshold: 2800,
+            industry: "Oil & Gas"
+        ),
+        makeTrigger(
+            id: "msg_002",
+            symbol: "TCS",
+            name: "Tata Consultancy Services",
+            price: 642.30,
+            change: -1.85,
+            direction: "below",
+            threshold: 650,
+            industry: "IT Services"
+        ),
+        makeEODSummary(id: "msg_003")
     ]
 
     func start(lastMessageID: String?) {
         stop()
-        self.lastMessageID = lastMessageID
-        onStatusChange?("Dummy mode — simulating server")
+        onStatusChange?("Dummy feed — simulating live socket")
 
         if lastMessageID == nil {
             onMessages?(seedMessages)
         }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 8.0, repeats: true) { [weak self] _ in
             self?.emitNextMessage()
         }
     }
@@ -58,29 +51,110 @@ final class DummyMessageService: MessageSyncService {
         onStatusChange?("Stopped")
     }
 
-    func updateLastMessageID(_ id: String?) {
-        lastMessageID = id
-    }
+    func updateLastMessageID(_ id: String?) {}
 
     private func emitNextMessage() {
         messageCounter += 1
         let id = String(format: "msg_%03d", 3 + messageCounter)
-        let symbols = ["HDFCBANK", "ICICIBANK", "SBIN", "BAJFINANCE", "WIPRO"]
-        let symbol = symbols[messageCounter % symbols.count]
-        let price = Double.random(in: 500...4500)
-        let change = Double.random(in: -3.0...3.0)
 
-        let message = StockMessage(id: id, rawJSON: [
-            "id": .string(id),
-            "timestamp": .string(ISO8601DateFormatter().string(from: Date())),
-            "type": .string(messageCounter % 3 == 0 ? "alert" : "price_update"),
-            "symbol": .string(symbol),
-            "price": .double(price),
-            "change_percent": .double(change),
-            "volume": .int(Int.random(in: 100_000...2_000_000)),
-            "note": .string("Dummy data — replace with live BE")
-        ])
+        let message: StockMessage
+        if messageCounter % 5 == 0 {
+            message = makeEODSummary(id: id)
+        } else {
+            let symbols = ["HDFCBANK", "ICICIBANK", "INFY", "SBIN", "WIPRO"]
+            let symbol = symbols[messageCounter % symbols.count]
+            let price = Double.random(in: 400...3500)
+            let change = Double.random(in: -2.5...2.5)
+            let above = change >= 0
+            message = makeTrigger(
+                id: id,
+                symbol: symbol,
+                name: symbol,
+                price: price,
+                change: change,
+                direction: above ? "above" : "below",
+                threshold: above ? price - 50 : price + 50,
+                industry: "Financials"
+            )
+        }
 
         onMessages?([message])
+    }
+
+    private static func makeTrigger(
+        id: String,
+        symbol: String,
+        name: String,
+        price: Double,
+        change: Double,
+        direction: String,
+        threshold: Double,
+        industry: String
+    ) -> StockMessage {
+        StockMessage(id: id, rawJSON: [
+            "id": .string(id),
+            "type": .string("trigger"),
+            "timestamp": .string(ISO8601DateFormatter().string(from: Date())),
+            "stock": .object([
+                "symbol": .string(symbol),
+                "name": .string(name),
+                "current_price": .double(price),
+                "change_percent_today": .double(change),
+                "industry": .string(industry)
+            ]),
+            "alert": .object([
+                "direction": .string(direction),
+                "threshold": .double(threshold),
+                "label": .string("\(symbol) moved \(direction) \(Int(threshold))")
+            ]),
+            "nifty": .object([
+                "value": .double(23_542.30),
+                "change_percent_today": .double(0.38)
+            ])
+        ])
+    }
+
+    private static func makeEODSummary(id: String) -> StockMessage {
+        StockMessage(id: id, rawJSON: [
+            "id": .string(id),
+            "type": .string("eod_summary"),
+            "timestamp": .string(ISO8601DateFormatter().string(from: Date())),
+            "date": .string("Today"),
+            "portfolio": .object([
+                "invested": .double(850_000),
+                "current_value": .double(872_450),
+                "today_pnl": .double(4_820),
+                "today_pnl_percent": .double(0.56)
+            ]),
+            "stocks": .array([
+                .object([
+                    "symbol": .string("RELIANCE"),
+                    "name": .string("Reliance Industries"),
+                    "invested": .double(200_000),
+                    "current_value": .double(208_500),
+                    "today_pnl": .double(2_100),
+                    "today_pnl_percent": .double(1.02),
+                    "status": .string("profit")
+                ]),
+                .object([
+                    "symbol": .string("TCS"),
+                    "name": .string("TCS"),
+                    "invested": .double(150_000),
+                    "current_value": .double(147_200),
+                    "today_pnl": .double(-980),
+                    "today_pnl_percent": .double(-0.66),
+                    "status": .string("loss")
+                ]),
+                .object([
+                    "symbol": .string("INFY"),
+                    "name": .string("Infosys"),
+                    "invested": .double(120_000),
+                    "current_value": .double(121_050),
+                    "today_pnl": .double(320),
+                    "today_pnl_percent": .double(0.26),
+                    "status": .string("profit")
+                ])
+            ])
+        ])
     }
 }

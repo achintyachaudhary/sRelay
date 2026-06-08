@@ -1,25 +1,120 @@
 # Stock Tracker API Contract
 
-The iOS app syncs messages incrementally by passing the **last received message ID**. The server returns only messages newer than that ID.
+The iOS app syncs messages incrementally by passing the **last received message ID**. The StockRelay server on Render stores messages in memory and pushes them to connected clients over WebSocket.
 
 ---
 
-## Connection Modes
+## Render Deployment
+
+| Item | Value |
+|------|-------|
+| Server URL | `https://srelay.onrender.com` |
+| WebSocket | `wss://srelay.onrender.com/ws/messages` |
+| Health check | `GET /health` (iOS pings every 7 min to prevent spin-down) |
+| Ingest | `POST /api/v1/ingest` (stock backend pushes here) |
+
+See [`StockRelay/README.md`](../StockRelay/README.md) for deploy steps.
+
+---
+
+## Connection Modes (iOS)
 
 | Mode | Behavior |
 |------|----------|
 | **Polling** | `GET` request every 5 seconds |
-| **WebSocket** | Persistent connection; client sends `last_message_id` on connect and after each batch |
+| **WebSocket** | Persistent connection with auto-reconnect; client sends `last_message_id` on connect |
+
+Additionally, the iOS app always calls `GET /health` every **7 minutes** (independent of connection mode) to keep the Render free-tier server awake.
 
 ---
 
-## 1. Polling (HTTP)
+## 0. Health / Keepalive
+
+### Request
+
+```http
+GET /health HTTP/1.1
+Host: srelay.onrender.com
+Accept: application/json
+```
+
+### Response
+
+```json
+{
+  "status": "ok",
+  "uptime": 3600,
+  "connected_clients": 1,
+  "message_count": 42
+}
+```
+
+---
+
+## 1. Ingest (Stock Backend → Relay)
+
+Your stock market backend pushes new data here. The relay stores it in memory and broadcasts to all connected iOS clients.
+
+### Request
+
+```http
+POST /api/v1/ingest HTTP/1.1
+Host: srelay.onrender.com
+Content-Type: application/json
+```
+
+**Single message**
+
+```json
+{
+  "id": "msg_001",
+  "type": "price_update",
+  "symbol": "RELIANCE",
+  "price": 2845.50,
+  "change_percent": 1.25
+}
+```
+
+**Batch**
+
+```json
+{
+  "messages": [
+    { "type": "price_update", "symbol": "TCS", "price": 3842.75 },
+    { "type": "alert", "symbol": "INFY", "message": "Volume spike detected" }
+  ]
+}
+```
+
+`id` and `timestamp` are auto-generated if omitted.
+
+### Response
+
+```json
+{
+  "accepted": 1,
+  "messages": [
+    {
+      "id": "msg_000001",
+      "timestamp": "2025-06-08T14:30:00Z",
+      "type": "price_update",
+      "symbol": "RELIANCE",
+      "price": 2845.50,
+      "change_percent": 1.25
+    }
+  ]
+}
+```
+
+---
+
+## 2. Polling (HTTP)
 
 ### Request
 
 ```http
 GET /api/v1/messages?since_id={last_message_id} HTTP/1.1
-Host: {server_ip}:{port}
+Host: srelay.onrender.com
 Accept: application/json
 ```
 
@@ -27,23 +122,7 @@ Accept: application/json
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `since_id` | string | No | Last message ID the client has. Omit or send `null` on first request to get all recent messages. |
-
-**Example (first request — no prior messages)**
-
-```http
-GET /api/v1/messages HTTP/1.1
-Host: 192.168.1.100:8080
-Accept: application/json
-```
-
-**Example (subsequent request)**
-
-```http
-GET /api/v1/messages?since_id=msg_003 HTTP/1.1
-Host: 192.168.1.100:8080
-Accept: application/json
-```
+| `since_id` | string | No | Last message ID the client has. Omit on first request. |
 
 ### Response
 
@@ -58,24 +137,11 @@ Accept: application/json
       "price": 2845.50,
       "change_percent": 1.25,
       "volume": 1250000
-    },
-    {
-      "id": "msg_005",
-      "timestamp": "2025-06-08T14:30:05Z",
-      "type": "alert",
-      "symbol": "TCS",
-      "message": "Price crossed resistance at 3850",
-      "severity": "high"
     }
   ],
   "has_more": false
 }
 ```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `messages` | array | New messages with `id` greater than `since_id` (server-defined ordering) |
-| `has_more` | boolean | If `true`, client should immediately poll again for remaining messages |
 
 **Empty response (no new messages)**
 
@@ -88,15 +154,17 @@ Accept: application/json
 
 ---
 
-## 2. WebSocket
+## 3. WebSocket
 
 ### Connect
 
 ```
-ws://{server_ip}:{port}/ws/messages
+wss://srelay.onrender.com/ws/messages
 ```
 
-### Client → Server (on connect and after processing each batch)
+Use `wss://` on Render (TLS required). Use `ws://` only for local dev.
+
+### Client → Server (on connect and after reconnect)
 
 ```json
 {
@@ -126,7 +194,7 @@ Omit `last_message_id` or send `null` on first connect.
 }
 ```
 
-### Server → Client (heartbeat, optional)
+### Server → Client (heartbeat)
 
 ```json
 {
@@ -134,7 +202,7 @@ Omit `last_message_id` or send `null` on first connect.
 }
 ```
 
-Client may respond with:
+Client responds with:
 
 ```json
 {
@@ -160,8 +228,8 @@ All other fields are displayed as-is (nested objects/arrays are JSON-stringified
 
 ```json
 {
-  "error": "invalid_since_id",
-  "message": "since_id 'msg_999' not found"
+  "error": "invalid_body",
+  "message": "Send a single message object or { \"messages\": [...] }"
 }
 ```
 
@@ -173,7 +241,31 @@ HTTP status codes: `400` bad request, `500` server error.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Server host | `192.168.1.100` | Placeholder — update when BE is ready |
-| Server port | `8080` | API port |
-| Connection mode | Polling | `polling` or `websocket` |
-| Use dummy data | `true` | Shows simulated messages until BE is connected |
+| Server URL | `https://srelay.onrender.com` | Full Render HTTPS URL |
+| Connection mode | WebSocket | `polling` or `websocket` |
+| Use dummy data | `false` | Offline testing with simulated messages |
+| Notifications | `false` | Push local notification on new messages |
+| Local storage | automatic | Messages saved to `messages.json` on device (max 500) |
+
+---
+
+## Data Flow
+
+```
+Stock Backend  --POST /api/v1/ingest-->  StockRelay (Render)
+                                              |
+                                         WebSocket push
+                                              |
+                                         iOS Stock Tracker
+                                              |
+                                         Local JSON storage
+```
+
+---
+
+## Limitations (Render Free Tier)
+
+- Server spins down after **15 minutes** without inbound traffic (HTTP or WebSocket)
+- iOS keepalive (`GET /health` every 7 min) prevents spin-down when app is active
+- In-memory messages are **lost** on spin-down/restart; iOS local storage is the archive
+- Ingest endpoint is **public** (no auth) for now
