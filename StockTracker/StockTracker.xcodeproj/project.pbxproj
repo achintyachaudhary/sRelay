@@ -29,6 +29,12 @@
 		A10000010000000000000015 /* TriggerAlertCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* TriggerAlertCard.swift */; };
 		A10000010000000000000016 /* EODSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000017 /* EODSummaryCard.swift */; };
 		A10000010000000000000017 /* FeedCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000018 /* FeedCardView.swift */; };
+		A10000010000000000000018 /* GoldiumConnectionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000001 /* GoldiumConnectionAttributes.swift */; };
+		A10000010000000000000019 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000002 /* LiveActivityService.swift */; };
+		B10000010000000000000001 /* GoldiumWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B30000010000000000000001 /* GoldiumWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B10000010000000000000002 /* GoldiumWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000003 /* GoldiumWidgetBundle.swift */; };
+		B10000010000000000000003 /* GoldiumLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000004 /* GoldiumLiveActivityWidget.swift */; };
+		B10000010000000000000004 /* GoldiumConnectionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000010000000000000001 /* GoldiumConnectionAttributes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,11 +61,48 @@
 		A20000010000000000000016 /* TriggerAlertCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerAlertCard.swift; sourceTree = "<group>"; };
 		A20000010000000000000017 /* EODSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EODSummaryCard.swift; sourceTree = "<group>"; };
 		A20000010000000000000018 /* FeedCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedCardView.swift; sourceTree = "<group>"; };
+		B20000010000000000000001 /* GoldiumConnectionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldiumConnectionAttributes.swift; sourceTree = "<group>"; };
+		B20000010000000000000002 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
+		B20000010000000000000003 /* GoldiumWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldiumWidgetBundle.swift; sourceTree = "<group>"; };
+		B20000010000000000000004 /* GoldiumLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldiumLiveActivityWidget.swift; sourceTree = "<group>"; };
+		B20000010000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A30000010000000000000001 /* StockTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StockTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000010000000000000001 /* GoldiumWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GoldiumWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXContainerItemProxy section */
+		B70000010000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A70000010000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B60000010000000000000001;
+			remoteInfo = GoldiumWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A60000010000000000000004 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B10000010000000000000001 /* GoldiumWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A40000010000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40000010000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -73,8 +116,28 @@
 			isa = PBXGroup;
 			children = (
 				A50000010000000000000002 /* StockTracker */,
+				B50000010000000000000001 /* Shared */,
+				B50000010000000000000002 /* GoldiumWidgetExtension */,
 				A50000010000000000000003 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		B50000010000000000000001 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				B20000010000000000000001 /* GoldiumConnectionAttributes.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		B50000010000000000000002 /* GoldiumWidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				B20000010000000000000003 /* GoldiumWidgetBundle.swift */,
+				B20000010000000000000004 /* GoldiumLiveActivityWidget.swift */,
+				B20000010000000000000005 /* Info.plist */,
+			);
+			path = GoldiumWidgetExtension;
 			sourceTree = "<group>";
 		};
 		A50000010000000000000002 /* StockTracker */ = {
@@ -97,6 +160,7 @@
 			isa = PBXGroup;
 			children = (
 				A30000010000000000000001 /* StockTracker.app */,
+				B30000010000000000000001 /* GoldiumWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,6 +231,7 @@
 				A2000001000000000000000E /* NotificationService.swift */,
 				A20000010000000000000010 /* KeepaliveService.swift */,
 				A20000010000000000000011 /* MessageStore.swift */,
+				B20000010000000000000002 /* LiveActivityService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -181,17 +246,43 @@
 				A60000010000000000000002 /* Sources */,
 				A40000010000000000000001 /* Frameworks */,
 				A60000010000000000000003 /* Resources */,
+				A60000010000000000000004 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B80000010000000000000001 /* PBXTargetDependency */,
 			);
 			name = StockTracker;
 			productName = StockTracker;
 			productReference = A30000010000000000000001 /* StockTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B60000010000000000000001 /* GoldiumWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B80000010000000000000002 /* Build configuration list for PBXNativeTarget "GoldiumWidgetExtension" */;
+			buildPhases = (
+				B60000010000000000000002 /* Sources */,
+				B40000010000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GoldiumWidgetExtension;
+			productName = GoldiumWidgetExtension;
+			productReference = B30000010000000000000001 /* GoldiumWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		B80000010000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B60000010000000000000001 /* GoldiumWidgetExtension */;
+			targetProxy = B70000010000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		A70000010000000000000001 /* Project object */ = {
@@ -202,6 +293,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					A60000010000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					B60000010000000000000001 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -220,6 +314,7 @@
 			projectRoot = "";
 			targets = (
 				A60000010000000000000001 /* StockTracker */,
+				B60000010000000000000001 /* GoldiumWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -261,6 +356,18 @@
 				A10000010000000000000015 /* TriggerAlertCard.swift in Sources */,
 				A10000010000000000000016 /* EODSummaryCard.swift in Sources */,
 				A10000010000000000000017 /* FeedCardView.swift in Sources */,
+				A10000010000000000000018 /* GoldiumConnectionAttributes.swift in Sources */,
+				A10000010000000000000019 /* LiveActivityService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B60000010000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000010000000000000002 /* GoldiumWidgetBundle.swift in Sources */,
+				B10000010000000000000003 /* GoldiumLiveActivityWidget.swift in Sources */,
+				B10000010000000000000004 /* GoldiumConnectionAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,6 +432,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StockTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Goldium";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -358,6 +466,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StockTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Goldium";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -372,6 +481,58 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B90000010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4FBRLJX2N7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoldiumWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GoldiumWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.achintyaranchaudhary.stocktracker.GoldiumWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B90000010000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4FBRLJX2N7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GoldiumWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GoldiumWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.achintyaranchaudhary.stocktracker.GoldiumWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -395,6 +556,15 @@
 			buildConfigurations = (
 				A90000010000000000000003 /* Debug */,
 				A90000010000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B80000010000000000000002 /* Build configuration list for PBXNativeTarget "GoldiumWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B90000010000000000000001 /* Debug */,
+				B90000010000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

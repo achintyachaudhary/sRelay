@@ -23,9 +23,6 @@ struct ContentView: View {
                 ToolbarItem(placement: .principal) {
                     GoldiumWordmark()
                 }
-                ToolbarItem(placement: .topBarLeading) {
-                    connectionIndicator
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSettings = true
@@ -50,17 +47,6 @@ struct ContentView: View {
             .onChange(of: settings.connectionMode) { _, _ in viewModel.restart() }
             .onChange(of: settings.useDummyData) { _, _ in viewModel.restart() }
             .onChange(of: settings.serverBaseURL) { _, _ in viewModel.restart() }
-        }
-    }
-
-    private var connectionIndicator: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(viewModel.isRunning ? settings.palette.profit : settings.palette.secondaryText)
-                .frame(width: 7, height: 7)
-            Text(viewModel.isRunning ? "Live" : "Offline")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(settings.palette.secondaryText)
         }
     }
 
