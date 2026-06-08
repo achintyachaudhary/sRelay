@@ -92,6 +92,14 @@ struct SettingsView: View {
 
     private var advancedSection: some View {
         Section("Advanced") {
+            Toggle("Dev Mode", isOn: $settings.devModeEnabled)
+
+            if settings.devModeEnabled {
+                Text("Swipe left on any feed card to delete it.")
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
+            }
+
             LabeledContent("Keepalive") {
                 Text("GET /health every 7 min")
                     .font(.caption)

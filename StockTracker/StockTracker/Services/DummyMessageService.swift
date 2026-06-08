@@ -114,12 +114,16 @@ final class DummyMessageService: MessageSyncService {
         ])
     }
 
-    private static func makeEODSummary(id: String) -> StockMessage {
-        StockMessage(id: id, rawJSON: [
+    private static func makeEODSummary(id: String, dayOffset: Int = 0) -> StockMessage {
+        let day = Calendar.current.date(byAdding: .day, value: dayOffset, to: Date()) ?? Date()
+        let dayString = StockMessage.dayKey(fromISO8601: ISO8601DateFormatter().string(from: day))
+            ?? StockMessage.todayDayKey()
+
+        return StockMessage(id: id, rawJSON: [
             "id": .string(id),
             "type": .string("eod_summary"),
-            "timestamp": .string(ISO8601DateFormatter().string(from: Date())),
-            "date": .string("Today"),
+            "timestamp": .string(ISO8601DateFormatter().string(from: day)),
+            "date": .string(dayString),
             "portfolio": .object([
                 "invested": .double(850_000),
                 "current_value": .double(872_450),

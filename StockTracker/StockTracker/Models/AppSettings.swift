@@ -37,6 +37,10 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(colorScheme.rawValue, forKey: Keys.colorScheme) }
     }
 
+    @Published var devModeEnabled: Bool {
+        didSet { UserDefaults.standard.set(devModeEnabled, forKey: Keys.devModeEnabled) }
+    }
+
     var palette: GoldiumPalette {
         colorScheme == .light ? .light : .dark
     }
@@ -76,6 +80,7 @@ final class AppSettings: ObservableObject {
         notificationsEnabled = defaults.object(forKey: Keys.notificationsEnabled) as? Bool ?? false
         let schemeRaw = defaults.string(forKey: Keys.colorScheme) ?? AppColorScheme.light.rawValue
         colorScheme = AppColorScheme(rawValue: schemeRaw) ?? .light
+        devModeEnabled = defaults.object(forKey: Keys.devModeEnabled) as? Bool ?? false
     }
 
     func resetServerURLToDefault() {
@@ -122,5 +127,6 @@ final class AppSettings: ObservableObject {
         static let useDummyData = "useDummyData"
         static let notificationsEnabled = "notificationsEnabled"
         static let colorScheme = "colorScheme"
+        static let devModeEnabled = "devModeEnabled"
     }
 }

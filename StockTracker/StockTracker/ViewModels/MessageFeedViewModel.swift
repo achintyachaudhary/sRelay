@@ -17,7 +17,7 @@ final class MessageFeedViewModel: ObservableObject {
     private let keepaliveService = KeepaliveService()
 
     var lastMessageID: String? {
-        messages.first?.id
+        FeedOrdering.latestMessageID(in: messages)
     }
 
     var isServerConnected: Bool {
@@ -37,7 +37,7 @@ final class MessageFeedViewModel: ObservableObject {
 
         let persisted = messageStore.load()
         if !persisted.isEmpty {
-            messages = sortNewestFirst(persisted)
+            messages = FeedOrdering.sort(persisted)
         }
     }
 
@@ -95,6 +95,13 @@ final class MessageFeedViewModel: ObservableObject {
         service?.updateLastMessageID(nil)
     }
 
+    func deleteMessage(id: String) {
+        messages.removeAll { $0.id == id }
+        newlyArrivedIDs.remove(id)
+        messageStore.save(messages)
+        service?.updateLastMessageID(lastMessageID)
+    }
+
     func isNewMessage(_ id: String) -> Bool {
         newlyArrivedIDs.contains(id)
     }
@@ -107,9 +114,8 @@ final class MessageFeedViewModel: ObservableObject {
         let shouldNotify = settings?.notificationsEnabled == true && !skipNotificationsForNextBatch
         skipNotificationsForNextBatch = false
 
-        for message in unique.reversed() {
-            messages.insert(message, at: 0)
-        }
+        messages.append(contentsOf: unique)
+        messages = FeedOrdering.sort(messages)
         newlyArrivedIDs.formUnion(unique.map(\.id))
 
         Task {
@@ -117,8 +123,8 @@ final class MessageFeedViewModel: ObservableObject {
             newlyArrivedIDs.subtract(unique.map(\.id))
         }
 
-        messageStore.save(sortNewestFirst(messages))
-        service?.updateLastMessageID(messages.first?.id)
+        messageStore.save(messages)
+        service?.updateLastMessageID(lastMessageID)
         lastError = nil
 
         if shouldNotify {
@@ -128,11 +134,4 @@ final class MessageFeedViewModel: ObservableObject {
         }
     }
 
-    private func sortNewestFirst(_ items: [StockMessage]) -> [StockMessage] {
-        items.sorted { lhs, rhs in
-            let left = lhs.rawJSON["timestamp"]?.stringValue ?? lhs.id
-            let right = rhs.rawJSON["timestamp"]?.stringValue ?? rhs.id
-            return left > right
-        }
-    }
 }

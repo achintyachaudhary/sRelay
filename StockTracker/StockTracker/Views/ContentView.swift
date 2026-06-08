@@ -47,28 +47,38 @@ struct ContentView: View {
     }
 
     private var feedList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if let error = viewModel.lastError {
-                    errorBanner(error)
-                }
+        List {
+            if let error = viewModel.lastError {
+                errorBanner(error)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            }
 
-                ForEach(viewModel.messages) { message in
-                    FeedCardView(
-                        message: message,
-                        isNew: viewModel.isNewMessage(message.id)
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-
-                    Divider()
-                        .overlay(settings.palette.divider)
-                        .padding(.leading, 16)
+            ForEach(viewModel.messages) { message in
+                FeedCardView(
+                    message: message,
+                    isNew: viewModel.isNewMessage(message.id)
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .swipeActions(edge: .trailing, allowsFullSwipe: settings.devModeEnabled) {
+                    if settings.devModeEnabled {
+                        Button(role: .destructive) {
+                            withAnimation(.easeOut(duration: 0.25)) {
+                                viewModel.deleteMessage(id: message.id)
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
-            .padding(.top, 4)
-            .padding(.bottom, 24)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(settings.palette.background)
         .refreshable {
             viewModel.restart()
         }
