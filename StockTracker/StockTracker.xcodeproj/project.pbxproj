@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		A10000010000000000000001 /* StockTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000001 /* StockTrackerApp.swift */; };
 		A10000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000002 /* ContentView.swift */; };
-		A10000010000000000000003 /* MessageCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000003 /* MessageCardView.swift */; };
 		A10000010000000000000004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000004 /* SettingsView.swift */; };
 		A10000010000000000000005 /* StockMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000005 /* StockMessage.swift */; };
 		A10000010000000000000006 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000006 /* AppSettings.swift */; };
@@ -35,7 +34,6 @@
 /* Begin PBXFileReference section */
 		A20000010000000000000001 /* StockTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockTrackerApp.swift; sourceTree = "<group>"; };
 		A20000010000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		A20000010000000000000003 /* MessageCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCardView.swift; sourceTree = "<group>"; };
 		A20000010000000000000004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A20000010000000000000005 /* StockMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockMessage.swift; sourceTree = "<group>"; };
 		A20000010000000000000006 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -244,7 +242,6 @@
 			files = (
 				A10000010000000000000001 /* StockTrackerApp.swift in Sources */,
 				A10000010000000000000002 /* ContentView.swift in Sources */,
-				A10000010000000000000003 /* MessageCardView.swift in Sources */,
 				A10000010000000000000004 /* SettingsView.swift in Sources */,
 				A10000010000000000000005 /* StockMessage.swift in Sources */,
 				A10000010000000000000006 /* AppSettings.swift in Sources */,

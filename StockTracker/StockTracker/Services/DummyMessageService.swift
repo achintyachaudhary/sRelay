@@ -8,7 +8,7 @@ final class DummyMessageService: MessageSyncService {
     private var timer: Timer?
     private var messageCounter = 0
 
-    private let seedMessages: [StockMessage] = [
+    private static let seedMessages: [StockMessage] = [
         makeTrigger(
             id: "msg_001",
             symbol: "RELIANCE",
@@ -37,7 +37,7 @@ final class DummyMessageService: MessageSyncService {
         onStatusChange?("Dummy feed — simulating live socket")
 
         if lastMessageID == nil {
-            onMessages?(seedMessages)
+            onMessages?(Self.seedMessages)
         }
 
         timer = Timer.scheduledTimer(withTimeInterval: 8.0, repeats: true) { [weak self] _ in
@@ -59,14 +59,14 @@ final class DummyMessageService: MessageSyncService {
 
         let message: StockMessage
         if messageCounter % 5 == 0 {
-            message = makeEODSummary(id: id)
+            message = Self.makeEODSummary(id: id)
         } else {
             let symbols = ["HDFCBANK", "ICICIBANK", "INFY", "SBIN", "WIPRO"]
             let symbol = symbols[messageCounter % symbols.count]
             let price = Double.random(in: 400...3500)
             let change = Double.random(in: -2.5...2.5)
             let above = change >= 0
-            message = makeTrigger(
+            message = Self.makeTrigger(
                 id: id,
                 symbol: symbol,
                 name: symbol,
