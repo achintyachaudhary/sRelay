@@ -30,7 +30,7 @@ Server runs at `http://localhost:10000`.
 
 Or use the included [`render.yaml`](render.yaml) Blueprint for one-click deploy.
 
-4. After deploy, your URL will be `https://your-app.onrender.com`.
+4. Deployed URL: `https://srelay.onrender.com`.
 
 ### Environment variables
 
@@ -44,7 +44,7 @@ Or use the included [`render.yaml`](render.yaml) Blueprint for one-click deploy.
 ### Health (keepalive)
 
 ```bash
-curl https://your-app.onrender.com/health
+curl https://srelay.onrender.com/health
 ```
 
 ```json
@@ -63,7 +63,7 @@ The iOS app calls this every **7 minutes** to prevent Render free-tier spin-down
 **Single message:**
 
 ```bash
-curl -X POST https://your-app.onrender.com/api/v1/ingest \
+curl -X POST https://srelay.onrender.com/api/v1/ingest \
   -H "Content-Type: application/json" \
   -d '{
     "id": "msg_001",
@@ -77,7 +77,7 @@ curl -X POST https://your-app.onrender.com/api/v1/ingest \
 **Batch:**
 
 ```bash
-curl -X POST https://your-app.onrender.com/api/v1/ingest \
+curl -X POST https://srelay.onrender.com/api/v1/ingest \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
@@ -92,13 +92,13 @@ curl -X POST https://your-app.onrender.com/api/v1/ingest \
 ### Polling (iOS fallback)
 
 ```bash
-curl "https://your-app.onrender.com/api/v1/messages?since_id=msg_001"
+curl "https://srelay.onrender.com/api/v1/messages?since_id=msg_001"
 ```
 
 ### WebSocket (iOS primary)
 
 ```
-wss://your-app.onrender.com/ws/messages
+wss://srelay.onrender.com/ws/messages
 ```
 
 Client sync message:
