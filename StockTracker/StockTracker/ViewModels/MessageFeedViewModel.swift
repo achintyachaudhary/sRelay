@@ -20,6 +20,12 @@ final class MessageFeedViewModel: ObservableObject {
         messages.first?.id
     }
 
+    var isServerConnected: Bool {
+        guard isRunning else { return false }
+        let status = statusText.lowercased()
+        return status.contains("connected") || status.contains("dummy feed")
+    }
+
     func configure(settings: AppSettings) {
         self.settings = settings
 
@@ -59,7 +65,6 @@ final class MessageFeedViewModel: ObservableObject {
         service.onStatusChange = { [weak self] status in
             Task { @MainActor in
                 self?.statusText = status
-                self?.syncLiveActivity(status: status)
             }
         }
 
@@ -67,7 +72,6 @@ final class MessageFeedViewModel: ObservableObject {
         service.start(lastMessageID: lastMessageID)
         isRunning = true
         lastError = nil
-        syncLiveActivity(status: statusText)
     }
 
     func stop() {
@@ -77,7 +81,6 @@ final class MessageFeedViewModel: ObservableObject {
         isRunning = false
         statusText = "Stopped"
         keepaliveStatus = "Keepalive stopped"
-        LiveActivityService.shared.update(isLive: false, status: "Disconnected")
     }
 
     func restart() {
@@ -123,11 +126,6 @@ final class MessageFeedViewModel: ObservableObject {
                 NotificationService.shared.notify(for: message)
             }
         }
-    }
-
-    private func syncLiveActivity(status: String) {
-        let isConnected = status.lowercased().contains("connected") || status.lowercased().contains("dummy feed")
-        LiveActivityService.shared.update(isLive: isConnected && isRunning, status: status)
     }
 
     private func sortNewestFirst(_ items: [StockMessage]) -> [StockMessage] {

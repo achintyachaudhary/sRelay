@@ -20,15 +20,11 @@ struct ContentView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    GoldiumWordmark()
-                }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button {
                         showSettings = true
                     } label: {
-                        Image(systemName: "gearshape")
-                            .foregroundStyle(settings.palette.secondaryText)
+                        GoldiumStatusAvatar(isConnected: viewModel.isServerConnected)
                     }
                 }
             }
@@ -97,7 +93,7 @@ struct ContentView: View {
 
     private var emptyState: some View {
         VStack(spacing: 20) {
-            GoldiumLogo(size: 64)
+            GoldiumStatusAvatar(isConnected: viewModel.isServerConnected, size: 56)
             Text("Your market feed")
                 .font(.system(size: 22, weight: .semibold, design: .rounded))
                 .foregroundStyle(settings.palette.primaryText)
