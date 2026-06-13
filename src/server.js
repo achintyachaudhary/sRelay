@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const messageStore = require('./messageStore');
+const kvStore = require('./kvStore');
 const wsHub = require('./wsHub');
 
 const app = express();
@@ -22,6 +23,8 @@ app.get('/', (_req, res) => {
       health: 'GET /health',
       messages: 'GET /api/v1/messages?since_id={id}',
       ingest: 'POST /api/v1/ingest',
+      store_get: 'GET /api/v1/store/:key',
+      store_post: 'POST /api/v1/store/:key',
       websocket: 'wss://{host}/ws/messages',
     },
   });
@@ -67,6 +70,65 @@ app.post('/api/v1/ingest', (req, res) => {
   res.status(201).json({
     accepted: stored.length,
     messages: stored,
+  });
+});
+
+app.post('/api/v1/store/:key', (req, res) => {
+  const { key } = req.params;
+  const body = req.body;
+
+  if (!kvStore.isValidKey(key)) {
+    return res.status(400).json({
+      error: 'invalid_key',
+      message: 'Key must be 1-128 characters: letters, numbers, underscore, or hyphen',
+    });
+  }
+
+  if (!body || typeof body !== 'object' || typeof body.value !== 'string') {
+    return res.status(400).json({
+      error: 'invalid_body',
+      message: 'Request body must be JSON with a "value" field containing a base64 string',
+    });
+  }
+
+  if (!kvStore.isValidBase64(body.value)) {
+    return res.status(400).json({
+      error: 'invalid_value',
+      message: '"value" must be a valid base64-encoded string',
+    });
+  }
+
+  const entry = kvStore.set(key, body.value);
+
+  res.status(201).json({
+    key,
+    value: entry.value,
+    updated_at: entry.updated_at,
+  });
+});
+
+app.get('/api/v1/store/:key', (req, res) => {
+  const { key } = req.params;
+
+  if (!kvStore.isValidKey(key)) {
+    return res.status(400).json({
+      error: 'invalid_key',
+      message: 'Key must be 1-128 characters: letters, numbers, underscore, or hyphen',
+    });
+  }
+
+  const entry = kvStore.get(key);
+  if (!entry) {
+    return res.status(404).json({
+      error: 'not_found',
+      message: `No value stored for key "${key}"`,
+    });
+  }
+
+  res.json({
+    key,
+    value: entry.value,
+    updated_at: entry.updated_at,
   });
 });
 
